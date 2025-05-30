@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/logo.png" type="image/png">
+    <title>Chat Assistant</title>
+    <style>
+        /* Reset dan Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* MODIFIED GRADIENT */
+            background: linear-gradient(135deg, #c0352c 0%, #0a4d85 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Login Styles */
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-title {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            /* MODIFIED FOCUS COLOR */
+            border-color: #0a4d85;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            /* MODIFIED GRADIENT */
+            background: linear-gradient(135deg, #c0352c 0%, #0a4d85 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #e74c3c; /* Standard error red, distinct from new theme */
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .demo-accounts {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        .demo-accounts h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .demo-accounts p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        /* Chat Styles */
+        .chat-container {
+            position: relative;
+            display: none; /* Initially hidden */
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .chat-container::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-image: url('/logo.png');
+            background-size: 200px;
+            background-repeat: no-repeat;
+            width: 200px;
+            height: 200px;
+            pointer-events: none; /* Agar tidak mengganggu klik */
+            z-index: 0;
+        }
+
+        .chat-container > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .chat-header {
+            /* MODIFIED GRADIENT */
+            background: linear-gradient(135deg, #c0352c 0%, #0a4d85 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.user .message-bubble {
+            /* MODIFIED GRADIENT */
+            background: linear-gradient(135deg, #c0352c 0%, #0a4d85 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid #e1e1e1;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #999;
+            margin: 0 8px;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e1e1e1;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e1e1e1;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input input:focus {
+            /* MODIFIED FOCUS COLOR */
+            border-color: #0a4d85;
+        }
+
+        .send-btn {
+            /* MODIFIED GRADIENT */
+            background: linear-gradient(135deg, #c0352c 0%, #0a4d85 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .login-container {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+                margin: 0;
+                max-width: 100%; /* Full width on mobile */
+            }
+
+            .message-bubble {
+                max-width: 85%;
+            }
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid #e1e1e1;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            max-width: 70px; /* Adjusted for dot size */
+            min-width: 60px; /* Ensure it doesn't collapse too much */
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            margin: 0 2px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); /* Adjusted bounce height */ }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginContainer">
+        <h1 class="login-title">
+            <img src="/logo.png" alt="Logo" style="height: 1.7em; vertical-align: middle; margin-right: 0.3em;">
+            Chat Assistant
+        </h1>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="userType">Tipe Akun:</label>
+                <select id="userType" required>
+                    <option value="">Pilih Tipe Akun</option>
+                    <option value="karyawan">Karyawan</option>
+                    <option value="manager">Manager</option>
+                    <option value="administrator">Administrator</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="login-btn">Masuk</button>
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+        
+        <div class="demo-accounts">
+            <h4>Demo Akun:</h4>
+            <p><strong>Administrator:</strong> admin / 123456</p>
+            <p><strong>Manager:</strong> manager / 111111</p>
+            <p><strong>Karyawan:</strong> karyawan / 222222</p>
+        </div>
+    </div>
+
+    <div class="chat-container" id="chatContainer">
+        <div class="chat-header">
+            <div>
+                <h2>💬 Assistant Chatbot PT. Nusa Tiga Putra</h2>
+                <small id="userInfo"></small>
+            </div>
+            <button class="logout-btn" id="logoutBtn">Keluar</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-bubble">
+                    Halo! Saya adalah assistant chatbot. Bagaimana saya bisa membantu Anda hari ini?
+                </div>
+                <div class="message-time" id="welcomeTime"></div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="Ketik pesan Anda..." maxlength="500">
+            <button class="send-btn" id="sendBtn">Kirim</button>
+        </div>
+    </div>
+
+    <script>
+        // Konfigurasi Akun Login (Hardcoded)
+        const accounts = {
+            'administrator': { username: 'admin', password: '123456' },
+            'manager': { username: 'manager', password: '111111' },
+            'karyawan': { username: 'karyawan', password: '222222' }
+        };
+
+        // Data FAQ Chatbot dengan Fuzzy Matching
+        const qaPairs = [
+            // === BASA-BASI & SALAM (UMUM) ===
+            {
+                keywords: ['halo', 'hai', 'hi', 'hei', 'woi', 'p', 'tes', 'permisi'],
+                answer: "Halo! Ada yang bisa saya bantu terkait pekerjaan Anda di PT. Nusa Tiga Putra? Silakan tanyakan apa saja seputar operasional atau informasi perusahaan. 😊"
+            },
+            {
+                keywords: ['selamat pagi', 'good morning', 'pagi', 'met pagi'],
+                answer: "Selamat pagi! Semangat untuk memulai hari ini! Ada yang bisa saya bantu untuk kelancaran tugas Anda?"
+            },
+            {
+                keywords: ['selamat siang', 'good afternoon', 'siang', 'met siang'],
+                answer: "Selamat siang! Semoga tetap produktif. Ada pertanyaan atau butuh informasi tertentu?"
+            },
+            {
+                keywords: ['selamat sore', 'good evening', 'sore', 'met sore'],
+                answer: "Selamat sore! Bagaimana pekerjaan hari ini? Ada yang bisa saya bantu sebelum Anda menyelesaikan aktivitas?"
+            },
+            {
+                keywords: ['selamat malam', 'good night', 'malam', 'met malam'],
+                answer: "Selamat malam! Jika Anda masih bekerja, ada yang bisa saya bantu? Jika tidak, selamat beristirahat."
+            },
+            {
+                keywords: ['apa kabar', 'gimana kabarnya', 'how are you', 'baik?'],
+                answer: "Kabar saya selalu baik dan siap membantu Anda! Bagaimana dengan Anda hari ini? Ada yang perlu didiskusikan atau ditanyakan?"
+            },
+            {
+                keywords: ['terima kasih', 'thanks', 'makasih', 'thank you', 'nuhun', 'suwun'],
+                answer: "Sama-sama! Senang bisa membantu Anda. Jika ada hal lain yang bisa saya bantu, jangan ragu untuk bertanya ya. Sukses selalu untuk Anda! 👍"
+            },
+            {
+                keywords: ['oke', 'ok', 'sip', 'baiklah', 'siap', 'mantap'],
+                answer: "Baik! Ada lagi yang bisa saya bantu atau sudah cukup jelas?"
+            },
+
+            {
+                keywords: ['jelas', 'cukup'],
+                answer: "Baik! Semoga harimu menyenangkan :)"
+            },
+
+            {
+                keywords: ['kamu siapa', 'ini siapa', 'dengan siapa saya bicara', 'nama kamu'],
+                answer: "Saya adalah Assistant Chatbot internal PT. Nusa Tiga Putra, dirancang untuk membantu tim kita dengan informasi dan jawaban cepat seputar pekerjaan sehari-hari."
+            },
+            {
+                keywords: ['bisa bantu', 'minta tolong', 'butuh bantuan', 'help'],
+                answer: "Tentu saja! Itulah tugas saya. Apa yang bisa saya bantu untuk Anda hari ini? Jelaskan saja kebutuhan Anda."
+            },
+
+            // === PERTANYAAN UMUM CHATBOT ===
+            {
+                keywords: ['apa itu chatbot', 'pengertian chatbot', 'definisi chatbot', 'chatbot adalah'],
+                answer: "Saya adalah program komputer yang dirancang untuk membantu Anda dengan memberikan informasi dan menjawab pertanyaan terkait operasional di PT. Nusa Tiga Putra secara otomatis melalui percakapan teks ini."
+            },
+            {
+                keywords: ['cara kerja chatbot', 'bagaimana chatbot bekerja', 'prinsip kerja chatbot'],
+                answer: "Saya bekerja dengan memproses pertanyaan Anda, mencari kata kunci yang relevan dalam database pengetahuan saya, lalu memberikan respons yang paling sesuai. Semakin spesifik pertanyaan Anda, semakin baik saya bisa membantu."
+            },
+            {
+                keywords: ['siapa pembuat', 'pembuat chatbot', 'developer chatbot', 'siapa yang membuat'],
+                answer: "Chatbot ini adalah sistem pendukung internal yang dikembangkan oleh tim IT PT. Nusa Tiga Putra untuk membantu Anda mendapatkan informasi operasional dan perusahaan dengan lebih cepat dan efisien."
+            },
+
+            // === INFORMASI UMUM PERUSAHAAN AGENCY ===
+            {
+                keywords: ['jam kerja', 'waktu kerja', 'office hours', 'jam kantor', 'jadwal kerja'],
+                answer: "Jam kerja standar kantor kita adalah Senin hingga Jumat, pukul 08:00 - 17:00 WIB. Untuk tim lapangan (kolektor), jam kerja dapat disesuaikan dengan kebutuhan dan target penagihan, namun tetap mengacu pada etika dan regulasi yang berlaku."
+            },
+            {
+                keywords: ['alamat kantor', 'lokasi kantor', 'dimana kantor', 'alamat perusahaan', 'kantor pusat dimana'],
+                answer: "Kantor pusat PT. Nusa Tiga Putra berlokasi di Jl. Contoh Alamat No. 123, Kota Anda. Jika ada pertanyaan mengenai kantor cabang atau area operasional tertentu, bisa ditanyakan lebih detail."
+            },
+            {
+                keywords: ['kontak hr', 'hubungi hr', 'contact hr', 'nomor hr', 'email hrd'],
+                answer: "Untuk urusan personalia, Anda dapat menghubungi tim HRD melalui email: hrd@agencyanda.com atau ext. telepon 101. Pastikan menyebutkan NIK dan departemen Anda."
+            },
+            {
+                keywords: ['struktur organisasi', 'siapa atasan saya', 'manager siapa'],
+                answer: "Informasi mengenai struktur organisasi dan atasan langsung Anda dapat dilihat pada portal karyawan atau buku panduan perusahaan. Jika baru bergabung, HRD akan menjelaskannya saat orientasi."
+            },
+            {
+                keywords: ['visi misi perusahaan', 'tujuan perusahaan', 'nilai perusahaan'],
+                answer: "Visi PT. Nusa Tiga Putra adalah menjadi agency penagihan terdepan yang profesional dan terpercaya. Misi kami adalah memberikan solusi penagihan yang efektif dan efisien bagi klien, serta menjaga nama baik perusahaan dan klien. Nilai-nilai utama kami adalah Integritas, Profesionalisme, dan Orientasi pada Hasil."
+            },
+
+            // === OPERASIONAL PENAGIHAN ===
+            {
+                keywords: ['sop penagihan', 'standar operasional penagihan', 'prosedur nagih', 'cara menagih yang benar'],
+                answer: "SOP Penagihan lengkap dapat diakses di portal internal perusahaan pada folder 'Dokumen Operasional'. Secara umum, selalu kedepankan pendekatan persuasif, jaga etika, patuhi regulasi, dan catat setiap interaksi dengan debitur."
+            },
+            {
+                keywords: ['sop kunjungan debitur', 'prosedur visit', 'aturan saat ketemu nasabah'],
+                answer: "Saat kunjungan: 1. Kenalkan diri dan perusahaan. 2. Sampaikan maksud kedatangan dengan jelas dan sopan. 3. Verifikasi data debitur. 4. Diskusikan solusi pembayaran. 5. Hindari intimidasi/ancaman. 6. Dokumentasikan hasil kunjungan. Detailnya ada di manual SOP Kunjungan."
+            },
+            {
+                keywords: ['sop telepon debitur', 'prosedur telepon nasabah', 'script telepon', 'penelponan'],
+                answer: "Saat menelepon debitur: 1. Ucapkan salam, perkenalkan diri dan perusahaan. 2. Verifikasi identitas debitur. 3. Sampaikan tujuan telepon terkait tagihan. 4. Dengarkan dan tawarkan solusi. 5. Jaga kerahasiaan data. 6. Catat hasil panggilan. Script dasar dan panduan ada di portal."
+            },
+            {
+                keywords: ['target penagihan', 'kpi kolektor', 'berapa target saya', 'target bulanan'],
+                answer: "Target penagihan bersifat individual dan tim, biasanya disampaikan oleh Supervisor/Manager Anda setiap awal periode (mingguan/bulanan). Target meliputi persentase recovery, jumlah kunjungan, atau nominal tertagih. Pastikan Anda memahaminya dengan baik."
+            },
+            {
+                keywords: ['cara input hasil kunjungan', 'laporan visit', 'update data debitur setelah kunjungan'],
+                answer: "Setelah melakukan kunjungan, segera input hasilnya melalui [Nama Sistem/Aplikasi Internal Anda, misal: 'Aplikasi Kolektor Pro']. Pastikan data yang diinput akurat dan lengkap, termasuk janji bayar, kondisi debitur, dan foto (jika diperlukan sesuai SOP)."
+            },
+            {
+                keywords: ['dokumen yang dibawa saat visit', 'berkas kunjungan', 'apa saja yang dibawa saat nagih'],
+                answer: "Saat kunjungan, pastikan membawa: 1. Surat Tugas Resmi. 2. ID Card Karyawan. 3. Salinan dokumen tagihan debitur (jika ada). 4. Formulir Kunjungan/Berita Acara. 5. Alat tulis dan perangkat untuk dokumentasi (jika menggunakan aplikasi)."
+            },
+            {
+                keywords: ['menghadapi debitur sulit', 'nasabah tidak kooperatif', 'debitur marah', 'cara atasi nasabah galak'],
+                answer: "Hadapi debitur sulit dengan tenang dan profesional. Dengarkan keluhannya, jangan terpancing emosi. Jelaskan kembali kewajibannya dan tawarkan opsi solusi yang mungkin. Jika situasi memanas atau ada ancaman, segera tinggalkan lokasi dan laporkan ke Supervisor Anda. Keselamatan Anda prioritas."
+            },
+            {
+                keywords: ['menawarkan diskon', 'potongan tagihan', 'keringanan pembayaran', 'restrukturisasi kredit'],
+                answer: "Penawaran diskon, keringanan, atau restrukturisasi kredit memiliki prosedur dan persetujuan khusus. Diskusikan kasus debitur dengan Supervisor/Manager Anda terlebih dahulu sebelum menjanjikan apapun kepada debitur. Setiap skema harus sesuai dengan kebijakan perusahaan dan klien."
+            },
+            {
+                keywords: ['penerimaan pembayaran', 'cara terima uang dari debitur', 'setor hasil tagihan'],
+                answer: "Sangat disarankan mengarahkan debitur untuk melakukan pembayaran langsung ke rekening resmi perusahaan atau melalui channel pembayaran resmi yang ditunjuk klien. Jika terpaksa menerima pembayaran tunai, segera setor sesuai prosedur keuangan perusahaan dan berikan tanda terima resmi. Hindari penggunaan rekening pribadi."
+            },
+            {
+                keywords: ['kode etik kolektor', 'etika penagihan', 'aturan perilaku karyawan'],
+                answer: "Kode etik kolektor PT. Nusa Tiga Putra mewajibkan setiap karyawan bertindak profesional, jujur, menjaga kerahasiaan data, menghormati debitur, dan tidak melakukan tindakan intimidatif, kekerasan, atau melanggar hukum. Pelanggaran kode etik akan dikenakan sanksi tegas. Detailnya ada di buku panduan karyawan."
+            },
+
+            // === LEGAL & KEPATUHAN (DASAR) ===
+            {
+                keywords: ['regulasi ojk penagihan', 'aturan bank indonesia', 'hukum menagih hutang', 'dasar hukum collection'],
+                answer: "Penagihan kredit di Indonesia diatur oleh beberapa regulasi, termasuk dari OJK (Otoritas Jasa Keuangan) dan BI (Bank Indonesia), terutama terkait perlindungan konsumen dan etika penagihan. Pastikan Anda membaca ringkasan regulasi yang disediakan perusahaan dan mengikuti pelatihan kepatuhan."
+            },
+            {
+                keywords: ['larangan saat menagih', 'apa yang tidak boleh dilakukan kolektor', 'tindakan ilegal penagihan'],
+                answer: "Dilarang keras melakukan: ancaman fisik/verbal, pelecehan, penyebaran informasi pribadi debitur ke pihak tidak berkepentingan, penagihan ke pihak ketiga yang tidak berhak, menggunakan dokumen palsu, atau mengaku sebagai aparat hukum. Semua tindakan harus sesuai koridor hukum."
+            },
+            {
+                keywords: ['perlindungan data pribadi debitur', 'pdp nasabah', 'kerahasiaan informasi'],
+                answer: "Data pribadi debitur bersifat rahasia dan harus dilindungi. Dilarang menyebarluaskan atau menggunakan data debitur untuk kepentingan lain di luar proses penagihan resmi. Pelanggaran PDP dapat berakibat sanksi hukum serius bagi pribadi dan perusahaan."
+            },
+            {
+                keywords: ['kontak tim legal', 'butuh bantuan hukum', 'konsultasi legal', 'nomor pengacara perusahaan'],
+                answer: "Jika Anda menghadapi masalah hukum terkait penagihan atau membutuhkan konsultasi aspek legal, segera hubungi Supervisor Anda yang akan meneruskannya ke tim Legal internal. Kontak darurat tim Legal: legal@agencyanda.com atau ext. 501."
+            },
+
+
+            // === IT SUPPORT (SISTEM PENAGIHAN) ===
+            {
+                keywords: ['lupa password sistem', 'reset password aplikasi', 'ganti password [Nama Sistem]', 'akun terkunci'],
+                answer: "Untuk reset password [Nama Sistem/Aplikasi Internal Anda], silakan hubungi IT Support di ext. 201 atau email: itsupport@agencyanda.com. Sertakan NIK dan username Anda. Jangan berikan password Anda kepada siapapun."
+            },
+            {
+                keywords: ['sistem error', 'aplikasi tidak bisa dibuka', '[Nama Sistem] bermasalah', 'kendala teknis aplikasi'],
+                answer: "Jika mengalami kendala teknis dengan [Nama Sistem/Aplikasi Internal Anda], coba restart perangkat Anda terlebih dahulu. Jika masalah berlanjut, laporkan ke IT Support (ext. 201) dengan menyertakan detail error, screenshot (jika ada), dan jenis perangkat yang digunakan."
+            },
+            {
+                keywords: ['cara pakai [Nama Sistem]', 'tutorial aplikasi penagihan', 'panduan input data debitur'],
+                answer: "Panduan penggunaan [Nama Sistem/Aplikasi Internal Anda] tersedia di portal karyawan bagian 'Tutorial IT'. Anda juga bisa meminta sesi refreshment training kepada tim IT atau Supervisor Anda jika diperlukan."
+            },
+            {
+                keywords: ['update data debitur di sistem', 'ubah status nasabah', 'catat janji bayar di aplikasi'],
+                answer: "Pastikan semua interaksi dan status terbaru debitur (misalnya janji bayar, pembayaran diterima, alamat baru) segera diupdate secara akurat di [Nama Sistem/Aplikasi Internal Anda]. Ini penting untuk koordinasi tim dan pelaporan."
+            },
+
+            // === KEUANGAN & PAYROLL (UMUM KARYAWAN) ===
+            {
+                keywords: ['gaji', 'payroll', 'slip gaji', 'tunjangan', 'kapan gajian'],
+                answer: "Informasi gaji, tunjangan, dan slip gaji dapat diakses melalui portal karyawan. Gaji biasanya ditransfer setiap tanggal 25 atau hari kerja terakhir sebelum tanggal 25. Untuk pertanyaan detail, hubungi bagian Payroll/Finance di ext. 301."
+            },
+            {
+                keywords: ['cuti tahunan', 'izin sakit', 'pengajuan leave', 'jatah libur'],
+                answer: "Pengajuan cuti tahunan, izin sakit, atau izin lainnya dilakukan melalui portal karyawan atau form yang tersedia di HRD. Pastikan pengajuan dilakukan sesuai prosedur dan batas waktu yang ditetapkan. Jatah cuti tahunan adalah 12 hari setelah masa kerja 1 tahun."
+            },
+            {
+                keywords: ['reimbursement bensin', 'klaim biaya operasional', 'penggantian biaya transport', 'uang makan lapangan'],
+                answer: "Untuk reimbursement biaya operasional lapangan (transport, bensin, dll), kumpulkan bukti transaksi (struk, nota) yang sah dan ajukan melalui form klaim ke bagian Finance. Pastikan sesuai dengan plafon dan kebijakan perusahaan. Proses klaim biasanya [X] hari kerja."
+            },
+
+            // === FASILITAS KANTOR (UMUM KARYAWAN) ===
+            {
+                keywords: ['parkir motor', 'parkir mobil', 'tempat parkir karyawan'],
+                answer: "Fasilitas parkir tersedia di area belakang perusahaan. Pastikan kendaraan Anda terdaftar dan menggunakan stiker parkir karyawan. Jaga keamanan barang bawaan Anda."
+            },
+            {
+                keywords: ['kantin', 'tempat makan siang', 'pesan makan', 'fasilitas pantry'],
+                answer: "Kantin atau pantry karyawan tersedia di [Lokasi Kantin/Pantry]. Mohon jaga kebersihan dan ketertiban bersama. Untuk pemesanan makan khusus (misal: rapat), hubungi GA."
+            },
+            {
+                keywords: ['ruang meeting', 'booking ruangan rapat', 'pinjam ruang meeting'],
+                answer: "Booking ruang meeting dilakukan melalui [Sistem Booking/Kontak GA] minimal [Waktu, misal: 1 hari] sebelumnya. Pastikan menginformasikan jumlah peserta dan kebutuhan peralatan (proyektor, dll)."
+            },
+
+            // === KEAMANAN KANTOR (UMUM KARYAWAN) ===
+            {
+                keywords: ['kartu akses hilang', 'id card rusak', 'lupa bawa kartu karyawan'],
+                answer: "Kartu akses/ID Card karyawan wajib dibawa dan digunakan. Jika hilang atau rusak, segera laporkan ke bagian Security atau HRD untuk pemblokiran dan pembuatan kartu baru (mungkin dikenakan biaya). Jika lupa membawa, lapor ke Security untuk izin masuk sementara."
+            },
+            {
+                keywords: ['nomor security', 'kontak keamanan', 'lapor satpam', 'keadaan darurat kantor'],
+                answer: "Tim Security bertugas 24/7. Untuk laporan keamanan atau keadaan darurat di area kantor, hubungi pos Security di lobby atau ext. 911 (internal)."
+            },
+
+            // === TRAINING & DEVELOPMENT (UMUM KARYAWAN) ===
+            {
+                keywords: ['training baru', 'pelatihan karyawan', 'jadwal training', 'pengembangan diri'],
+                answer: "Informasi program pelatihan internal (produk, sistem, soft skills, legal) dan eksternal akan diumumkan oleh HRD. Anda juga bisa mengajukan kebutuhan training kepada atasan Anda untuk pengembangan karir."
+            },
+            {
+                keywords: ['promosi jabatan', 'naik pangkat', 'jenjang karir', 'peluang karir internal'],
+                answer: "Perusahaan mendukung pengembangan karir karyawan. Peluang promosi didasarkan pada kinerja, kompetensi, dan kebutuhan organisasi. Diskusikan rencana karir Anda dengan atasan dan HRD."
+            }
+        ];
+
+        // State Management
+        let currentUser = null;
+        let isTyping = false;
+        let sessionTimeout = null;
+        let lastActivity = Date.now();
+        const SESSION_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+        const CHAT_HISTORY_KEY = 'chatbotMessageHistory';
+
+
+        // DOM Elements
+        const loginContainer = document.getElementById('loginContainer');
+        const chatContainer = document.getElementById('chatContainer');
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userInfo = document.getElementById('userInfo');
+        const welcomeTime = document.getElementById('welcomeTime'); // ID for the initial welcome message's time
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkExistingSession();
+            const initialWelcomeTimeEl = document.getElementById('welcomeTime');
+            if (initialWelcomeTimeEl) {
+                 initialWelcomeTimeEl.textContent = getCurrentTime();
+            }
+            
+            loginForm.addEventListener('submit', handleLogin);
+            
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            sendBtn.addEventListener('click', sendMessage);
+            logoutBtn.addEventListener('click', handleLogout);
+            
+            trackUserActivity();
+            
+            const observer = new MutationObserver(function() {
+                if (chatContainer.style.display === 'flex') {
+                    messageInput.focus();
+                }
+            });
+            observer.observe(chatContainer, { attributes: true, attributeFilter: ['style'] });
+        });
+
+        function checkExistingSession() {
+            const sessionData = sessionStorage.getItem('chatbotSession');
+            if (sessionData) {
+                try {
+                    const session = JSON.parse(sessionData);
+                    const now = Date.now();
+                    
+                    if (now - session.lastActivity < SESSION_DURATION) {
+                        currentUser = session.user;
+                        lastActivity = session.lastActivity; 
+                        showChatInterface(); 
+                        loadChatHistory();   
+                        startSessionTimer(); 
+                        return;
+                    } else {
+                        sessionStorage.removeItem('chatbotSession');
+                        sessionStorage.removeItem(CHAT_HISTORY_KEY); 
+                    }
+                } catch (e) {
+                    console.error("Error parsing session data:", e);
+                    sessionStorage.removeItem('chatbotSession');
+                    sessionStorage.removeItem(CHAT_HISTORY_KEY); 
+                }
+            }
+        }
+        
+        function loadChatHistory() {
+            const historyData = sessionStorage.getItem(CHAT_HISTORY_KEY);
+            if (historyData) {
+                try {
+                    const history = JSON.parse(historyData);
+                    if (history && history.length > 0) {
+                        const existingMessages = chatMessages.querySelectorAll('.message');
+                        existingMessages.forEach((msg, index) => {
+                            if (index > 0) { 
+                                msg.remove();
+                            }
+                        });
+
+                        history.forEach(msgData => {
+                            addMessageToDOM(msgData.text, msgData.sender, msgData.time);
+                        });
+                    }
+                } catch (e) {
+                    console.error("Error parsing chat history:", e);
+                    sessionStorage.removeItem(CHAT_HISTORY_KEY); // Clear corrupted history
+                }
+            }
+            scrollToBottom();
+        }
+
+
+        function saveSession() {
+            if (currentUser) {
+                const sessionData = {
+                    user: currentUser,
+                    lastActivity: lastActivity
+                };
+                sessionStorage.setItem('chatbotSession', JSON.stringify(sessionData));
+            }
+        }
+
+        function updateActivity() {
+            lastActivity = Date.now();
+            saveSession();
+            resetSessionTimer();
+        }
+
+        function trackUserActivity() {
+            const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+            events.forEach(event => {
+                document.addEventListener(event, function() {
+                    if (currentUser) { 
+                        updateActivity();
+                    }
+                }, true);
+            });
+        }
+
+        function startSessionTimer() {
+            resetSessionTimer(); 
+        }
+
+        function resetSessionTimer() {
+            if (sessionTimeout) {
+                clearTimeout(sessionTimeout);
+            }
+            
+            if (currentUser) { 
+                const timeRemaining = SESSION_DURATION - (Date.now() - lastActivity);
+                
+                if (timeRemaining > 0) {
+                    sessionTimeout = setTimeout(() => {
+                        handleSessionTimeout();
+                    }, timeRemaining);
+                } else {
+                    handleSessionTimeout();
+                }
+            }
+        }
+
+        function handleSessionTimeout() {
+            if (currentUser) { 
+                 alert('Sesi Anda telah berakhir karena tidak aktif selama 15 menit. Silakan login kembali.');
+                 handleLogout();
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const userType = document.getElementById('userType').value;
+            const username = document.getElementById('username').value.toLowerCase();
+            const password = document.getElementById('password').value;
+            
+            errorMessage.textContent = '';
+            
+            if (accounts[userType] && accounts[userType].username === username && accounts[userType].password === password) {
+                currentUser = {
+                    type: userType,
+                    username: username,
+                    loginTime: new Date()
+                };
+                lastActivity = Date.now(); 
+                sessionStorage.removeItem(CHAT_HISTORY_KEY); 
+                saveSession(); 
+                showChatInterface();
+                startSessionTimer(); 
+            } else {
+                errorMessage.textContent = 'Username atau password salah!';
+                document.getElementById('password').value = '';
+            }
+        }
+
+        function showChatInterface() {
+            loginContainer.style.display = 'none';
+            chatContainer.style.display = 'flex';
+            
+            const userTypeDisplay = currentUser.type.charAt(0).toUpperCase() + currentUser.type.slice(1);
+            userInfo.textContent = `${userTypeDisplay}: ${currentUser.username}`;
+            
+            const existingMessages = chatMessages.querySelectorAll('.message');
+            if (existingMessages.length === 1) { 
+                 const initialWelcomeTimeEl = document.getElementById('welcomeTime');
+                 if (initialWelcomeTimeEl) {
+                    initialWelcomeTimeEl.textContent = getCurrentTime();
+                 }
+            }
+
+            setTimeout(() => messageInput.focus(), 100);
+        }
+
+        function handleLogout() {
+            if (sessionTimeout) {
+                clearTimeout(sessionTimeout);
+                sessionTimeout = null;
+            }
+            
+            currentUser = null;
+            lastActivity = 0; 
+            sessionStorage.removeItem('chatbotSession');
+            sessionStorage.removeItem(CHAT_HISTORY_KEY); 
+            
+            chatContainer.style.display = 'none';
+            loginContainer.style.display = 'block';
+            
+            loginForm.reset();
+            errorMessage.textContent = '';
+            
+            const messages = chatMessages.querySelectorAll('.message');
+            messages.forEach((msg, index) => {
+                if (index > 0) { 
+                    msg.remove();
+                }
+            });
+            const initialWelcomeTimeEl = document.getElementById('welcomeTime');
+            if (initialWelcomeTimeEl) {
+                 initialWelcomeTimeEl.textContent = getCurrentTime();
+            }
+        }
+
+        function sendMessage() {
+            const messageText = messageInput.value.trim();
+            if (!messageText || isTyping) return;
+            
+            updateActivity(); 
+            
+            addMessageToChat(messageText, 'user'); 
+            messageInput.value = '';
+            
+            showTypingIndicator();
+            
+            setTimeout(() => {
+                const response = generateResponse(messageText);
+                hideTypingIndicator();
+                addMessageToChat(response, 'bot'); 
+            }, 1000 + Math.random() * 1000);
+        }
+
+        function addMessageToChat(text, sender) {
+            const time = getCurrentTime();
+            addMessageToDOM(text, sender, time);
+
+            const historyData = sessionStorage.getItem(CHAT_HISTORY_KEY);
+            let history = [];
+            if (historyData) {
+                try {
+                    history = JSON.parse(historyData);
+                } catch (e) {
+                    console.error("Error parsing chat history for saving:", e);
+                    history = []; // Reset if corrupted
+                }
+            }
+            history.push({ text, sender, time });
+            sessionStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(history));
+        }
+        
+        function addMessageToDOM(text, sender, time) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = text; 
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            timeDiv.textContent = time;
+            
+            messageDiv.appendChild(bubble);
+            messageDiv.appendChild(timeDiv);
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+
+        function showTypingIndicator() {
+            if (isTyping) return;
+            
+            isTyping = true;
+            sendBtn.disabled = true; 
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
+            typingDiv.id = 'typingIndicator';
+            
+            typingDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+            isTyping = false;
+            sendBtn.disabled = false; 
+        }
+        
+        function generateResponse(userMessage) {
+            const cleanedMessage = userMessage.toLowerCase().trim()
+                .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "") 
+                .replace(/\s+/g, ' ') 
+                .trim();
+
+            if (!cleanedMessage) {
+                 return "Maaf, saya tidak menerima pesan kosong. Ada yang bisa saya bantu?";
+            }
+            
+            let bestMatch = null;
+            let highestScore = 0;
+            let bestKeywordLength = 0; // For tie-breaking
+            
+            qaPairs.forEach(qa => {
+                qa.keywords.forEach(keyword => {
+                    const currentKeyword = keyword.toLowerCase().trim();
+                    const score = calculateSimilarity(cleanedMessage, currentKeyword);
+                    
+                    if (score > highestScore && score >= 0.35) { 
+                        highestScore = score;
+                        bestMatch = qa.answer;
+                        bestKeywordLength = currentKeyword.length;
+                    } else if (score === highestScore && score >= 0.35) {
+                        if (currentKeyword.length > bestKeywordLength) {
+                            bestMatch = qa.answer; 
+                            bestKeywordLength = currentKeyword.length;
+                        }
+                    }
+                });
+            });
+            
+            return bestMatch || "Maaf, saya belum mengerti pertanyaan itu. Bisa coba tanyakan dengan kata kunci yang berbeda? Atau hubungi HR/Supervisor Anda untuk bantuan lebih lanjut.";
+        }
+
+        function calculateSimilarity(str1, str2) { 
+            if (!str1 || !str2) return 0; 
+
+            const s1 = str1; 
+            const s2 = str2; 
+
+            if (s1 === s2) return 1.0; 
+
+            const words1 = s1.split(' ');
+            const words2 = s2.split(' ');
+
+            if (words2.length > 1 && s1.includes(s2)) {
+                return 0.92 + (s2.length / s1.length) * 0.03; 
+            }
+
+            if (words2.length === 1 && words1.includes(s2)) {
+                return 0.90;
+            }
+            
+            if (words2.length > 1) {
+                const allKeywordWordsPresent = words2.every(word => words1.includes(word));
+                if (allKeywordWordsPresent) {
+                    return 0.80 + (words2.length / words1.length) * 0.08; 
+                }
+            }
+
+            if (s1.includes(s2)) {
+                if (s2.length <= 3 && !words1.includes(s2)) { // Check if s2 is a whole word
+                    let isSubstringOfSomeWord = words1.some(w1 => w1.includes(s2) && w1 !== s2);
+                    if (isSubstringOfSomeWord) return 0.35; 
+                }
+                return 0.70 + (s2.length / s1.length) * 0.1; 
+            }
+            
+            if (s2.includes(s1)) {
+                 return 0.65 + (s1.length / s2.length) * 0.1;
+            }
+
+            const commonWords = words1.filter(word => words2.includes(word));
+            if (commonWords.length > 0) {
+                let score = (commonWords.length * 2) / (words1.length + words2.length);
+                if (commonWords.some(cw => words2.includes(cw) && cw.length > 3)) {
+                    score += 0.1;
+                }
+                return Math.min(0.75, score); 
+            }
+
+            const maxLength = Math.max(s1.length, s2.length);
+            if (maxLength === 0) return 0;
+
+            let edits = 0;
+            const s1Array = s1.split(''); // Corrected variable name from previous context
+            const s2Array = s2.split(''); // Corrected variable name from previous context
+            const distanceMatrix = Array(s2Array.length + 1).fill(null).map(() =>
+            Array(s1Array.length + 1).fill(null));
+
+            for (let i = 0; i <= s1Array.length; i += 1) {
+                distanceMatrix[0][i] = i;
+            }
+            for (let j = 0; j <= s2Array.length; j += 1) {
+                distanceMatrix[j][0] = j;
+            }
+
+            for (let j = 1; j <= s2Array.length; j += 1) {
+                for (let i = 1; i <= s1Array.length; i += 1) {
+                    const indicator = s1Array[i - 1] === s2Array[j - 1] ? 0 : 1;
+                    distanceMatrix[j][i] = Math.min(
+                        distanceMatrix[j][i - 1] + 1, 
+                        distanceMatrix[j - 1][i] + 1, 
+                        distanceMatrix[j - 1][i - 1] + indicator, 
+                    );
+                }
+            }
+            edits = distanceMatrix[s2Array.length][s1Array.length];
+            let similarity = 1.0 - (edits / maxLength);
+            
+            if (Math.abs(s1.length - s2.length) > maxLength / 1.5) { 
+                similarity -= 0.25;
+            }
+            return Math.max(0, similarity * 0.6); 
+        }
+
+
+        function getCurrentTime() {
+            return new Date().toLocaleTimeString('id-ID', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+</body>
+</html>
